@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Рено — AI Редизайн Интерьера</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+
+<style>
+/* ── Variables ──────────────────────────────────────────────────────────── */
+:root {
+  --ink:        #0A0A0A;
+  --ink-soft:   #1C1C1C;
+  --surface:    #F7F4EE;
+  --surface-2:  #EDE9E0;
+  --surface-3:  #E0D9CE;
+  --gold:       #B8953A;
+  --gold-light: #D4AF60;
+  --gold-muted: #8A6E2A;
+  --text:       #2A2720;
+  --text-muted: #7A7266;
+  --text-faint: #B0A898;
+  --border:     #D4CCBE;
+  --border-soft:#E8E2D8;
+  --red:        #C0392B;
+  --green:      #2D7D4A;
+  --radius:     4px;
+  --radius-lg:  8px;
+  --shadow:     0 2px 16px rgba(0,0,0,0.08);
+  --shadow-lg:  0 8px 40px rgba(0,0,0,0.12);
+  --trans:      200ms ease;
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Noise texture overlay ──────────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* ── Typography ─────────────────────────────────────────────────────────── */
+h1, h2, h3 { font-family: 'Cormorant Garamond', serif; font-weight: 300; letter-spacing: -0.01em; }
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(247, 244, 238, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px;
+}
+.header-inner {
+  max-width: 1400px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+}
+.logo {
+  display: flex; align-items: baseline; gap: 10px;
+}
+.logo-mark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px; font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+.logo-mark span { color: var(--gold); }
+.logo-sub {
+  font-size: 10px; font-weight: 300;
+  color: var(--text-faint);
+  text-transform: uppercase; letter-spacing: 0.15em;
+}
+.status-pill {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-muted);
+  font-weight: 300;
+}
+.status-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text-faint);
+  transition: background var(--trans);
+}
+.status-dot.ok { background: var(--green); }
+.status-dot.err { background: var(--red); }
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+.container {
+  max-width: 1400px; margin: 0 auto;
+  padding: 48px 40px;
+  position: relative; z-index: 1;
+}
+
+/* ── Page title ─────────────────────────────────────────────────────────── */
+.page-hero {
+  margin-bottom: 48px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.page-hero h1 {
+  font-size: clamp(38px, 5vw, 62px);
+  line-height: 1.05;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.page-hero h1 em { color: var(--gold); font-style: italic; }
+.page-hero p {
+  font-size: 15px; color: var(--text-muted); font-weight: 300;
+  max-width: 560px; line-height: 1.7;
+}
+
+/* ── Step labels ─────────────────────────────────────────────────────────── */
+.step-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 10px; font-weight: 500; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 16px;
+}
+.step-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--gold); color: #fff;
+  font-size: 10px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
+.card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  box-shadow: var(--shadow);
+  transition: box-shadow var(--trans);
+}
+.card:hover { box-shadow: var(--shadow-lg); }
+
+/* ── Main 2-col grid ─────────────────────────────────────────────────────── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+@media (max-width: 900px) {
+  .main-grid { grid-template-columns: 1fr; }
+  header { padding: 0 20px; }
+  .container { padding: 32px 20px; }
+}
+
+/* ── Upload zone ─────────────────────────────────────────────────────────── */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--trans);
+  position: relative;
+  min-height: 260px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px;
+  overflow: hidden;
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--gold);
+  background: rgba(184, 149, 58, 0.04);
+}
+.upload-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer;
+}
+.upload-icon {
+  font-size: 36px; opacity: 0.4;
+  transition: transform var(--trans), opacity var(--trans);
+}
+.upload-zone:hover .upload-icon { transform: scale(1.1); opacity: 0.7; }
+.upload-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; font-weight: 400; color: var(--text-muted);
+}
+.upload-hint { font-size: 12px; color: var(--text-faint); font-weight: 300; }
+
+/* ── Preview ─────────────────────────────────────────────────────────────── */
+.preview-wrap {
+  position: relative; overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--ink);
+}
+.preview-wrap img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  border-radius: var(--radius);
+  transition: opacity var(--trans);
+}
+.preview-remove {
+  position: absolute; top: 8px; right: 8px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(0,0,0,0.6); color: #fff;
+  border: none; cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--trans);
+}
+.preview-remove:hover { background: var(--red); }
+
+/* ── Textarea ─────────────────────────────────────────────────────────────── */
+.textarea-wrap { position: relative; }
+textarea {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 300;
+  color: var(--text);
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 120px;
+  transition: border-color var(--trans), background var(--trans);
+  outline: none;
+}
+textarea:focus {
+  border-color: var(--gold);
+  background: #fff;
+}
+textarea::placeholder { color: var(--text-faint); }
+.char-count {
+  position: absolute; bottom: 8px; right: 12px;
+  font-size: 11px; color: var(--text-faint);
+  pointer-events: none;
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── Suggestions ─────────────────────────────────────────────────────────── */
+.suggestions {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 10px;
+}
+.suggest-chip {
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px; font-weight: 400;
+  color: var(--text-muted);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all var(--trans);
+  white-space: nowrap;
+}
+.suggest-chip:hover {
+  border-color: var(--gold);
+  color: var(--gold-muted);
+  background: rgba(184, 149, 58, 0.06);
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px;
+  padding: 13px 28px;
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  letter-spacing: 0.03em;
+  cursor: pointer; border: none;
+  transition: all var(--trans);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--ink);
+  color: var(--surface);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--ink-soft);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.btn-gold {
+  background: var(--gold);
+  color: #fff;
+}
+.btn-gold:hover:not(:disabled) {
+  background: var(--gold-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(184, 149, 58, 0.35);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--gold-muted);
+}
+.btn:disabled {
+  opacity: 0.4; cursor: not-allowed; transform: none !important;
+  box-shadow: none !important;
+}
+.btn-row {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+/* ── Progress loader ─────────────────────────────────────────────────────── */
+.loader-wrap {
+  display: none;
+  flex-direction: column; align-items: center;
+  gap: 20px; padding: 48px 24px;
+  text-align: center;
+}
+.loader-wrap.visible { display: flex; }
+.progress-bar-track {
+  width: 100%; max-width: 360px; height: 2px;
+  background: var(--border);
+  border-radius: 2px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 2px;
+  transition: width 0.4s ease;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+.loader-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px; font-weight: 300; font-style: italic;
+  color: var(--text-muted);
+}
+.loader-sub { font-size: 12px; color: var(--text-faint); font-weight: 300; }
+
+/* ── Result image ────────────────────────────────────────────────────────── */
+.result-image-wrap {
+  display: none;
+}
+.result-image-wrap.visible { display: block; }
+
+.image-compare {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  margin-top: 16px;
+}
+@media (max-width: 700px) {
+  .image-compare { grid-template-columns: 1fr; }
+}
+.compare-panel {}
+.compare-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-faint); font-weight: 500;
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.compare-label .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+}
+.dot-before { background: var(--text-faint); }
+.dot-after  { background: var(--gold); }
+.compare-panel img {
+  width: 100%; border-radius: var(--radius);
+  border: 1px solid var(--border);
+  display: block;
+}
+
+/* ── Estimate section ────────────────────────────────────────────────────── */
+.estimate-section {
+  margin-top: 24px;
+  display: none;
+  animation: fadeUp 0.4s ease;
+}
+.estimate-section.visible { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Estimate header ─────────────────────────────────────────────────────── */
+.estimate-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.estimate-title h2 {
+  font-size: 32px; color: var(--ink);
+  margin-bottom: 6px;
+}
+.estimate-title p {
+  font-size: 13px; color: var(--text-muted); font-weight: 300;
+  max-width: 500px; line-height: 1.6;
+}
+.estimate-meta {
+  display: flex; gap: 24px; flex-wrap: wrap; flex-shrink: 0;
+}
+.meta-item {
+  text-align: right;
+}
+.meta-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px; font-weight: 400; color: var(--ink);
+  line-height: 1;
+}
+.meta-label {
+  font-size: 11px; color: var(--text-faint); text-transform: uppercase;
+  letter-spacing: 0.1em; font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ── Total bar ───────────────────────────────────────────────────────────── */
+.total-bar {
+  background: var(--ink);
+  color: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 20px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+  margin-bottom: 28px;
+}
+.total-bar-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em;
+  color: var(--text-faint); font-weight: 500;
+}
+.total-bar-split {
+  display: flex; gap: 32px; flex-wrap: wrap;
+}
+.total-split-item {}
+.total-split-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; font-weight: 400; color: var(--surface);
+}
+.total-split-label {
+  font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 300;
+}
+.total-grand {
+  text-align: right;
+}
+.total-grand-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.5); font-weight: 500;
+}
+.total-grand-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 36px; font-weight: 400; color: var(--gold-light);
+  line-height: 1;
+}
+
+/* ── Category section ────────────────────────────────────────────────────── */
+.category-block {
+  margin-bottom: 24px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.category-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--surface-2);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--trans);
+}
+.category-header:hover { background: var(--surface-3); }
+.category-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; font-weight: 500; color: var(--text);
+}
+.category-icon { font-size: 18px; }
+.category-total {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px; color: var(--gold-muted); font-weight: 400;
+}
+.category-arrow {
+  color: var(--text-faint); font-size: 12px;
+  transition: transform var(--trans);
+}
+.category-block.open .category-arrow { transform: rotate(180deg); }
+.category-table-wrap {
+  display: none; overflow-x: auto;
+}
+.category-block.open .category-table-wrap { display: block; }
+
+table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px;
+}
+th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-faint); font-weight: 500;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-soft);
+  white-space: nowrap;
+}
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text); font-weight: 300;
+  vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(184, 149, 58, 0.03); }
+.td-num {
+  font-family: 'DM Mono', monospace;
+  text-align: right; white-space: nowrap;
+}
+.td-total {
+  font-family: 'DM Mono', monospace;
+  text-align: right; font-weight: 500;
+  color: var(--ink); white-space: nowrap;
+}
+th.align-right { text-align: right; }
+
+/* ── Notes ───────────────────────────────────────────────────────────────── */
+.notes-wrap {
+  margin-top: 24px; padding: 20px 24px;
+  background: rgba(184, 149, 58, 0.06);
+  border: 1px solid rgba(184, 149, 58, 0.2);
+  border-radius: var(--radius-lg);
+}
+.notes-title {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+  font-weight: 500; color: var(--gold-muted);
+  margin-bottom: 10px;
+}
+.notes-list { list-style: none; }
+.notes-list li {
+  font-size: 13px; color: var(--text-muted); font-weight: 300;
+  padding: 4px 0; padding-left: 16px; position: relative;
+  line-height: 1.5;
+}
+.notes-list li::before {
+  content: '–';
+  position: absolute; left: 0;
+  color: var(--gold);
+}
+
+/* ── Error toast ─────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+  background: var(--ink); color: var(--surface);
+  padding: 14px 20px; border-radius: var(--radius);
+  font-size: 13px; max-width: 360px;
+  box-shadow: var(--shadow-lg);
+  display: none;
+  animation: slideIn 0.25s ease;
+}
+.toast.visible { display: flex; align-items: flex-start; gap: 10px; }
+@keyframes slideIn {
+  from { transform: translateX(20px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+.toast-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.toast-msg { flex: 1; line-height: 1.5; }
+.toast-close {
+  background: none; border: none; color: rgba(255,255,255,0.4);
+  cursor: pointer; font-size: 16px; flex-shrink: 0;
+  transition: color var(--trans);
+}
+.toast-close:hover { color: #fff; }
+
+/* ── Export controls ─────────────────────────────────────────────────────── */
+.export-row {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin-top: 24px; padding-top: 20px;
+  border-top: 1px solid var(--border-soft);
+}
+
+/* ── Revised prompt ──────────────────────────────────────────────────────── */
+.revised-prompt {
+  margin-top: 12px; padding: 12px 16px;
+  background: var(--surface-2); border-radius: var(--radius);
+  border-left: 3px solid var(--gold);
+}
+.revised-prompt-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-faint); font-weight: 500; margin-bottom: 4px;
+}
+.revised-prompt-text {
+  font-size: 12px; color: var(--text-muted); font-weight: 300;
+  line-height: 1.6; font-style: italic;
+}
+
+/* ── Divider ─────────────────────────────────────────────────────────────── */
+.divider {
+  height: 1px; background: var(--border-soft);
+  margin: 28px 0;
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark">Ре<span>но</span></div>
+      <div class="logo-sub">AI редизайн &amp; смета</div>
+    </div>
+    <div class="status-pill">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Проверка подключения…</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── Main ───────────────────────────────────────────────────────────────── -->
+<main class="container">
+
+  <!-- Hero -->
+  <div class="page-hero">
+    <h1>Умный<br><em>редизайн</em> интерьера</h1>
+    <p>Загрузите фото комнаты, опишите желаемые изменения — получите визуализацию редизайна и детальную смету за секунды.</p>
+  </div>
+
+  <!-- Step 1 + 2 — Upload & Describe -->
+  <div class="main-grid">
+
+    <!-- Left: Upload -->
+    <div class="card">
+      <div class="step-label">
+        <div class="step-num">1</div>
+        Фотография интерьера
+      </div>
+
+      <!-- Upload zone (hidden when image loaded) -->
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept="image/*" capture="environment">
+        <div class="upload-icon">🏠</div>
+        <div class="upload-label">Перетащите фото или нажмите</div>
+        <div class="upload-hint">JPG, PNG, WEBP · до 20 МБ</div>
+      </div>
+
+      <!-- Preview (hidden until file loaded) -->
+      <div class="preview-wrap" id="previewWrap" style="display:none; height:260px;">
+        <img id="previewImg" src="" alt="Исходный интерьер">
+        <button class="preview-remove" id="removeImg" title="Удалить">✕</button>
+      </div>
+    </div>
+
+    <!-- Right: Describe -->
+    <div class="card">
+      <div class="step-label">
+        <div class="step-num">2</div>
+        Желаемые изменения
+      </div>
+
+      <div class="textarea-wrap">
+        <textarea id="descTextarea" placeholder="Например: замените диван на белый угловой диван в скандинавском стиле, добавьте деревянный журнальный столик, поменяйте шторы на льняные бежевые…" maxlength="1000"></textarea>
+        <div class="char-count" id="charCount">0 / 1000</div>
+      </div>
+
+      <div class="suggestions">
+        <div class="suggest-chip" data-text="Замените цвет стен на светло-серый">🎨 Цвет стен</div>
+        <div class="suggest-chip" data-text="Добавьте живые растения в горшках">🌿 Растения</div>
+        <div class="suggest-chip" data-text="Смените напольное покрытие на паркет из светлого дуба">🪵 Паркет</div>
+        <div class="suggest-chip" data-text="Замените мебель на современную в скандинавском стиле">🛋️ Скандинав</div>
+        <div class="suggest-chip" data-text="Добавьте декоративное освещение и торшеры">💡 Освещение</div>
+        <div class="suggest-chip" data-text="Обновите текстиль: шторы, подушки, ковёр в нейтральных тонах">🪞 Текстиль</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnRedesign" disabled>
+          <span>✦</span> Создать редизайн
+        </button>
+        <button class="btn btn-ghost" id="btnEstimateOnly" disabled>
+          Только смета
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Redesign result -->
+  <div class="card result-image-wrap" id="resultImageWrap">
+
+    <!-- Loader (redesign) -->
+    <div class="loader-wrap" id="loaderRedesign">
+      <div class="progress-bar-track"><div class="progress-bar-fill" id="progressRedesign"></div></div>
+      <div class="loader-text" id="loaderRedesignText">Анализирую пространство…</div>
+      <div class="loader-sub">Это может занять 20–60 секунд</div>
+    </div>
+
+    <!-- Compare images -->
+    <div id="compareBlock" style="display:none;">
+      <div class="step-label">
+        <div class="step-num">3</div>
+        Результат редизайна
+      </div>
+      <div class="image-compare">
+        <div class="compare-panel">
+          <div class="compare-label">
+            <div class="dot dot-before"></div> До
+          </div>
+          <img id="cmpBefore" src="" alt="До">
+        </div>
+        <div class="compare-panel">
+          <div class="compare-label">
+            <div class="dot dot-after"></div> После (AI)
+          </div>
+          <img id="cmpAfter" src="" alt="После">
+        </div>
+      </div>
+      <div id="revisedPromptWrap" class="revised-prompt" style="display:none;">
+        <div class="revised-prompt-label">Интерпретация запроса</div>
+        <div class="revised-prompt-text" id="revisedPromptText"></div>
+      </div>
+      <div class="btn-row">
+        <a class="btn btn-gold" id="btnDownloadImg" download="redesign.png" href="#">
+          ↓ Скачать изображение
+        </a>
+        <button class="btn btn-primary" id="btnGetEstimate">
+          📋 Сформировать смету
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estimate section -->
+  <div class="card estimate-section" id="estimateSection">
+
+    <!-- Loader (estimate) -->
+    <div class="loader-wrap" id="loaderEstimate">
+      <div class="progress-bar-track"><div class="progress-bar-fill" id="progressEstimate"></div></div>
+      <div class="loader-text" id="loaderEstimateText">Рассчитываю стоимость работ…</div>
+      <div class="loader-sub">Анализирую изображение и составляю смету</div>
+    </div>
+
+    <!-- Estimate content -->
+    <div id="estimateContent" style="display:none;">
+
+      <div class="estimate-header">
+        <div class="estimate-title">
+          <h2>Смета ремонта</h2>
+          <p id="estimateSummary"></p>
+        </div>
+        <div class="estimate-meta">
+          <div class="meta-item">
+            <div class="meta-value" id="metaArea">—</div>
+            <div class="meta-label">м² площадь</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-value" id="metaWeeks">—</div>
+            <div class="meta-label">нед. срок</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total bar -->
+      <div class="total-bar">
+        <div>
+          <div class="total-bar-label">Структура затрат</div>
+          <div class="total-bar-split">
+            <div class="total-split-item">
+              <div class="total-split-value" id="totalWorks">—</div>
+              <div class="total-split-label">Работы</div>
+            </div>
+            <div class="total-split-item">
+              <div class="total-split-value" id="totalMaterials">—</div>
+              <div class="total-split-label">Материалы</div>
+            </div>
+          </div>
+        </div>
+        <div class="total-grand">
+          <div class="total-grand-label">Итого</div>
+          <div class="total-grand-value" id="grandTotal">—</div>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div id="categoriesWrap"></div>
+
+      <!-- Notes -->
+      <div class="notes-wrap" id="notesWrap" style="display:none;">
+        <div class="notes-title">⚠ Важные примечания</div>
+        <ul class="notes-list" id="notesList"></ul>
+      </div>
+
+      <!-- Export -->
+      <div class="export-row">
+        <button class="btn btn-ghost" id="btnExportCSV">↓ CSV</button>
+        <button class="btn btn-ghost" id="btnPrint">🖨 Печать</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <div class="toast-icon">⚠</div>
+  <div class="toast-msg" id="toastMsg"></div>
+  <button class="toast-close" id="toastClose">✕</button>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+const state = {
+  file: null,
+  originalDataUrl: null,
+  redesignedDataUrl: null,
+  estimate: null
+};
+
+// ── DOM refs ───────────────────────────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+const uploadZone    = $('uploadZone');
+const fileInput     = $('fileInput');
+const previewWrap   = $('previewWrap');
+const previewImg    = $('previewImg');
+const removeImg     = $('removeImg');
+const descTextarea  = $('descTextarea');
+const charCount     = $('charCount');
+const btnRedesign   = $('btnRedesign');
+const btnEstimateOnly = $('btnEstimateOnly');
+const resultImageWrap = $('resultImageWrap');
+const loaderRedesign = $('loaderRedesign');
+const compareBlock  = $('compareBlock');
+const cmpBefore     = $('cmpBefore');
+const cmpAfter      = $('cmpAfter');
+const btnDownloadImg = $('btnDownloadImg');
+const btnGetEstimate = $('btnGetEstimate');
+const estimateSection = $('estimateSection');
+const loaderEstimate = $('loaderEstimate');
+const estimateContent = $('estimateContent');
+const toast         = $('toast');
+const toastMsg      = $('toastMsg');
+const toastClose    = $('toastClose');
+
+// ── Health check ───────────────────────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const r = await fetch('/api/health');
+    const d = await r.json();
+    const dot = $('statusDot'), txt = $('statusText');
+    if (d.openai && d.anthropic) {
+      dot.className = 'status-dot ok';
+      txt.textContent = 'Все сервисы подключены';
+    } else {
+      dot.className = 'status-dot err';
+      const missing = [!d.openai && 'OpenAI', !d.anthropic && 'Anthropic'].filter(Boolean).join(', ');
+      txt.textContent = `Нет ключей: ${missing}`;
+    }
+  } catch {
+    $('statusDot').className = 'status-dot err';
+    $('statusText').textContent = 'Сервер недоступен';
+  }
+}
+checkHealth();
+
+// ── File upload ────────────────────────────────────────────────────────────────
+fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); uploadZone.classList.remove('dragover');
+  handleFile(e.dataTransfer.files[0]);
+});
+
+removeImg.addEventListener('click', () => {
+  state.file = null; state.originalDataUrl = null;
+  fileInput.value = '';
+  uploadZone.style.display = '';
+  previewWrap.style.display = 'none';
+  updateButtons();
+});
+
+function handleFile(file) {
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Поддерживаются только изображения'); return; }
+  if (file.size > 20 * 1024 * 1024) { showToast('Файл слишком большой (макс. 20 МБ)'); return; }
+
+  state.file = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    state.originalDataUrl = e.target.result;
+    previewImg.src = e.target.result;
+    uploadZone.style.display = 'none';
+    previewWrap.style.display = 'block';
+    updateButtons();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Textarea ───────────────────────────────────────────────────────────────────
+descTextarea.addEventListener('input', () => {
+  charCount.textContent = `${descTextarea.value.length} / 1000`;
+  updateButtons();
+});
+
+document.querySelectorAll('.suggest-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const sep = descTextarea.value.trim() ? ', ' : '';
+    descTextarea.value += sep + chip.dataset.text;
+    charCount.textContent = `${descTextarea.value.length} / 1000`;
+    descTextarea.dispatchEvent(new Event('input'));
+    descTextarea.focus();
+  });
+});
+
+function updateButtons() {
+  const hasFile = !!state.file;
+  const hasDesc = descTextarea.value.trim().length > 0;
+  btnRedesign.disabled = !(hasFile && hasDesc);
+  btnEstimateOnly.disabled = !hasFile;
+}
+
+// ── Redesign ───────────────────────────────────────────────────────────────────
+btnRedesign.addEventListener('click', async () => {
+  if (!state.file) return;
+
+  // Show section + loader
+  resultImageWrap.classList.add('visible');
+  showLoader(loaderRedesign, $('progressRedesign'), $('loaderRedesignText'), [
+    'Анализирую пространство…',
+    'Применяю изменения к интерьеру…',
+    'Сохраняю геометрию помещения…',
+    'Финализирую редизайн…'
+  ]);
+  compareBlock.style.display = 'none';
+  btnRedesign.disabled = true;
+
+  try {
+    const formData = new FormData();
+    formData.append('image', state.file);
+    formData.append('description', descTextarea.value.trim());
+
+    const res = await fetch('/api/redesign', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'Ошибка сервера');
+
+    state.redesignedDataUrl = data.image;
+
+    // Show compare
+    cmpBefore.src = state.originalDataUrl;
+    cmpAfter.src  = data.image;
+    btnDownloadImg.href = data.image;
+
+    if (data.revised_prompt) {
+      $('revisedPromptText').textContent = data.revised_prompt;
+      $('revisedPromptWrap').style.display = 'block';
+    }
+
+    hideLoader(loaderRedesign);
+    compareBlock.style.display = 'block';
+
+  } catch (err) {
+    hideLoader(loaderRedesign);
+    resultImageWrap.classList.remove('visible');
+    showToast(err.message);
+  } finally {
+    updateButtons();
+  }
+});
+
+// ── Estimate ───────────────────────────────────────────────────────────────────
+async function loadEstimate(useRedesigned) {
+  const imageBase64 = useRedesigned && state.redesignedDataUrl
+    ? state.redesignedDataUrl
+    : state.originalDataUrl;
+
+  if (!imageBase64) { showToast('Нет изображения для анализа'); return; }
+
+  estimateSection.classList.add('visible');
+  showLoader(loaderEstimate, $('progressEstimate'), $('loaderEstimateText'), [
+    'Изучаю состояние интерьера…',
+    'Рассчитываю стоимость работ…',
+    'Подбираю материалы…',
+    'Составляю итоговую смету…'
+  ]);
+  estimateContent.style.display = 'none';
+  btnGetEstimate.disabled = true;
+  btnEstimateOnly.disabled = true;
+
+  try {
+    const res = await fetch('/api/estimate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        imageBase64,
+        description: descTextarea.value.trim(),
+        isRedesigned: useRedesigned && !!state.redesignedDataUrl
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Ошибка сервера');
+
+    state.estimate = data.estimate;
+    renderEstimate(data.estimate);
+
+    hideLoader(loaderEstimate);
+    estimateContent.style.display = 'block';
+    estimateSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch (err) {
+    hideLoader(loaderEstimate);
+    estimateSection.classList.remove('visible');
+    showToast(err.message);
+  } finally {
+    btnGetEstimate.disabled = false;
+    updateButtons();
+  }
+}
+
+btnGetEstimate.addEventListener('click', () => loadEstimate(true));
+btnEstimateOnly.addEventListener('click', () => loadEstimate(false));
+
+// ── Render estimate ────────────────────────────────────────────────────────────
+function fmt(n) {
+  return Number(n).toLocaleString('ru-RU') + ' ₽';
+}
+
+function renderEstimate(e) {
+  $('estimateSummary').textContent = e.summary || '';
+  $('metaArea').textContent   = e.area_sqm   ? `${e.area_sqm}` : '—';
+  $('metaWeeks').textContent  = e.timeline_weeks ? `${e.timeline_weeks}` : '—';
+  $('totalWorks').textContent     = fmt(e.total_works || 0);
+  $('totalMaterials').textContent = fmt(e.total_materials || 0);
+  $('grandTotal').textContent     = fmt(e.grand_total || 0);
+
+  // Categories
+  const wrap = $('categoriesWrap');
+  wrap.innerHTML = '';
+
+  (e.categories || []).forEach((cat, i) => {
+    const catTotal = cat.items.reduce((s, x) => s + (x.total || 0), 0);
+    const block = document.createElement('div');
+    block.className = 'category-block open';
+    block.innerHTML = `
+      <div class="category-header">
+        <div class="category-title">
+          <span class="category-icon">${cat.icon || '🔧'}</span>
+          ${escHtml(cat.name)}
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="category-total">${fmt(catTotal)}</span>
+          <span class="category-arrow">▼</span>
+        </div>
+      </div>
+      <div class="category-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Работа / Материал</th>
+              <th class="align-right">Ед.</th>
+              <th class="align-right">Кол-во</th>
+              <th class="align-right">Цена / ед.</th>
+              <th class="align-right">Итого</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(cat.items || []).map(item => `
+              <tr>
+                <td>${escHtml(item.work)}</td>
+                <td class="td-num">${escHtml(item.unit || '')}</td>
+                <td class="td-num">${item.qty}</td>
+                <td class="td-num">${fmt(item.price_per_unit)}</td>
+                <td class="td-total">${fmt(item.total)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    block.querySelector('.category-header').addEventListener('click', () => {
+      block.classList.toggle('open');
+    });
+    wrap.appendChild(block);
+  });
+
+  // Notes
+  const notes = e.notes || [];
+  if (notes.length) {
+    const ul = $('notesList');
+    ul.innerHTML = notes.map(n => `<li>${escHtml(n)}</li>`).join('');
+    $('notesWrap').style.display = 'block';
+  }
+}
+
+function escHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── CSV export ─────────────────────────────────────────────────────────────────
+$('btnExportCSV').addEventListener('click', () => {
+  if (!state.estimate) return;
+  const e = state.estimate;
+  const rows = [['Категория','Работа / Материал','Единица','Количество','Цена за ед.','Итого']];
+  (e.categories || []).forEach(cat => {
+    (cat.items || []).forEach(item => {
+      rows.push([cat.name, item.work, item.unit, item.qty, item.price_per_unit, item.total]);
+    });
+  });
+  rows.push(['', '', '', '', 'ИТОГО (работы)', e.total_works]);
+  rows.push(['', '', '', '', 'ИТОГО (материалы)', e.total_materials]);
+  rows.push(['', '', '', '', 'ИТОГО ВСЕГО', e.grand_total]);
+
+  const csv = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'smeta.csv';
+  a.click();
+});
+
+$('btnPrint').addEventListener('click', () => window.print());
+
+// ── Loader helpers ─────────────────────────────────────────────────────────────
+function showLoader(loaderEl, barEl, textEl, messages) {
+  loaderEl.classList.add('visible');
+  let i = 0, pct = 0;
+  barEl.style.width = '0%';
+  textEl.textContent = messages[0];
+
+  const textTimer = setInterval(() => {
+    i = (i + 1) % messages.length;
+    textEl.textContent = messages[i];
+  }, 4000);
+
+  const barTimer = setInterval(() => {
+    pct = Math.min(pct + Math.random() * 4, 90);
+    barEl.style.width = pct + '%';
+  }, 600);
+
+  loaderEl._timers = [textTimer, barTimer];
+  loaderEl._barEl  = barEl;
+}
+
+function hideLoader(loaderEl) {
+  (loaderEl._timers || []).forEach(clearInterval);
+  if (loaderEl._barEl) loaderEl._barEl.style.width = '100%';
+  setTimeout(() => loaderEl.classList.remove('visible'), 300);
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  toastMsg.textContent = msg;
+  toast.classList.add('visible');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('visible'), 6000);
+}
+toastClose.addEventListener('click', () => toast.classList.remove('visible'));
+</script>
+</body>
+</html>
