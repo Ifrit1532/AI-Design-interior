@@ -1,12 +1,12 @@
 require('dotenv').config();
 const express = require('express');
-const multer = require('multer');
-const cors = require('cors');
+const multer  = require('multer');
+const cors    = require('cors');
 const FormData = require('form-data');
-const fetch = require('node-fetch');
-const path = require('path');
+const fetch   = require('node-fetch');
+const path    = require('path');
 
-const app = express();
+const app  = express();
 const PORT = process.env.PORT || 3000;
 
 // ─── Middleware ────────────────────────────────────────────────────────────────
@@ -16,81 +16,68 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+  limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) cb(null, true);
     else cb(new Error('Only image files are allowed'));
   }
 });
 
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+function requireKey(res) {
+  if (!process.env.OPENAI_API_KEY) {
+    res.status(400).json({ error: 'OPENAI_API_KEY не задан в .env' });
+    return false;
+  }
+  return true;
+}
+
 // ─── Health check ──────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    openai: !!process.env.OPENAI_API_KEY,
-    anthropic: !!process.env.ANTHROPIC_API_KEY
-  });
+  res.json({ status: 'ok', openai: !!process.env.OPENAI_API_KEY });
 });
 
-// ─── Route 1: Image Redesign via OpenAI gpt-image-1 ──────────────────────────
+// ─── Route 1: Image Redesign — OpenAI gpt-image-1 ─────────────────────────────
 app.post('/api/redesign', upload.single('image'), async (req, res) => {
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(400).json({ error: 'OPENAI_API_KEY не задан в .env' });
-    }
-    if (!req.file) {
-      return res.status(400).json({ error: 'Изображение не загружено' });
-    }
+    if (!requireKey(res)) return;
+    if (!req.file)             return res.status(400).json({ error: 'Изображение не загружено' });
 
     const { description } = req.body;
-    if (!description?.trim()) {
-      return res.status(400).json({ error: 'Описание изменений обязательно' });
-    }
+    if (!description?.trim()) return res.status(400).json({ error: 'Описание изменений обязательно' });
 
-    // Build a precise prompt for interior editing preserving geometry
-    const systemPrompt = `You are an expert interior designer. Edit the uploaded interior photo according to the instructions below.
-CRITICAL RULES:
-- Preserve EXACTLY: room geometry, walls, windows, doors, ceiling height, floor plan, lighting positions, and all unchanged objects
-- Only modify the specific elements mentioned in the instructions
-- Maintain photorealistic quality and consistent lighting
-- Keep proportions and perspective identical to the original photo
-Instructions: ${description.trim()}`;
+    const prompt =
+      `You are an expert interior designer. Edit the uploaded interior photo.\n` +
+      `CRITICAL RULES:\n` +
+      `- Preserve EXACTLY: room geometry, walls, windows, doors, ceiling height, floor plan, lighting positions, and all unchanged objects\n` +
+      `- Only modify the specific elements mentioned below\n` +
+      `- Maintain photorealistic quality and consistent lighting\n` +
+      `- Keep proportions and perspective identical to the original photo\n` +
+      `Instructions: ${description.trim()}`;
 
     const formData = new FormData();
     formData.append('model', 'gpt-image-1');
-    formData.append('prompt', systemPrompt);
+    formData.append('prompt', prompt);
     formData.append('n', '1');
     formData.append('size', '1024x1024');
     formData.append('quality', 'high');
-    formData.append(
-      'image',
-      req.file.buffer,
-      { filename: 'interior.png', contentType: req.file.mimetype }
-    );
+    formData.append('image', req.file.buffer, { filename: 'interior.png', contentType: req.file.mimetype });
 
     const response = await fetch('https://api.openai.com/v1/images/edits', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        ...formData.getHeaders()
-      },
+      headers: { 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`, ...formData.getHeaders() },
       body: formData
     });
 
     const data = await response.json();
-
     if (!response.ok) {
-      console.error('OpenAI error:', data);
-      return res.status(response.status).json({
-        error: data.error?.message || 'Ошибка OpenAI API'
-      });
+      console.error('OpenAI /images/edits error:', data);
+      return res.status(response.status).json({ error: data.error?.message || 'Ошибка OpenAI API' });
     }
 
-    // Return base64 image
-    const imageData = data.data[0].b64_json;
     res.json({
       success: true,
-      image: `data:image/png;base64,${imageData}`,
+      image: `data:image/png;base64,${data.data[0].b64_json}`,
       revised_prompt: data.data[0].revised_prompt || null
     });
 
@@ -100,88 +87,65 @@ Instructions: ${description.trim()}`;
   }
 });
 
-// ─── Route 2: Renovation Estimate via Anthropic Claude ────────────────────────
-app.post('/api/estimate', express.json({ limit: '50mb' }), async (req, res) => {
+// ─── Route 2: Renovation Estimate — OpenAI gpt-4o (vision) ────────────────────
+app.post('/api/estimate', async (req, res) => {
   try {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return res.status(400).json({ error: 'ANTHROPIC_API_KEY не задан в .env' });
-    }
+    if (!requireKey(res)) return;
 
     const { imageBase64, description, isRedesigned } = req.body;
-    if (!imageBase64) {
-      return res.status(400).json({ error: 'Изображение обязательно' });
-    }
+    if (!imageBase64) return res.status(400).json({ error: 'Изображение обязательно' });
 
-    // Extract base64 data from data URL
-    const base64Data = imageBase64.includes(',')
-      ? imageBase64.split(',')[1]
-      : imageBase64;
+    // gpt-4o accepts data-URL directly in image_url
+    const imageUrl = imageBase64.startsWith('data:')
+      ? imageBase64
+      : `data:image/jpeg;base64,${imageBase64}`;
 
-    const mediaType = imageBase64.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+    const userPrompt =
+      `Проанализируй ${isRedesigned ? 'отредактированное изображение интерьера' : 'изображение интерьера'} и составь подробную смету ремонта.\n` +
+      (description ? `Желаемые изменения: ${description}\n` : '') +
+      `\nВерни ТОЛЬКО валидный JSON без markdown-обёрток, строго по схеме (все числа без разделителей, только цифры):\n` +
+      `{\n` +
+      `  "summary": "краткое описание объёма работ (2-3 предложения)",\n` +
+      `  "area_sqm": <число>,\n` +
+      `  "categories": [\n` +
+      `    {\n` +
+      `      "name": "название категории",\n` +
+      `      "icon": "эмодзи",\n` +
+      `      "items": [\n` +
+      `        { "work": "...", "unit": "м²|м.п.|шт|компл.", "qty": <число>, "price_per_unit": <число>, "total": <число> }\n` +
+      `      ]\n` +
+      `    }\n` +
+      `  ],\n` +
+      `  "total_works": <число>,\n` +
+      `  "total_materials": <число>,\n` +
+      `  "grand_total": <число>,\n` +
+      `  "timeline_weeks": <число>,\n` +
+      `  "notes": ["примечание 1", "примечание 2"]\n` +
+      `}\n` +
+      `Категории: Демонтаж, Черновые работы, Чистовые работы, Электрика, Сантехника (если видна), Материалы и отделка, Мебель и декор.\n` +
+      `Цены — актуальные для Москвы 2025 года.`;
 
-    const systemPrompt = `Ты — опытный прораб и сметчик с 20-летним стажем в России. 
-Анализируй изображение интерьера и составляй детальные сметы ремонта.
-Отвечай ТОЛЬКО в формате JSON без markdown-обёрток, строго следуя схеме.`;
-
-    const userPrompt = `Проанализируй ${isRedesigned ? 'отредактированное изображение интерьера' : 'изображение интерьера'} и составь подробную смету ремонта.
-${description ? `Желаемые изменения: ${description}` : ''}
-
-Верни JSON строго по этой схеме (числа без разделителей тысяч, только цифры):
-{
-  "summary": "краткое описание объёма работ в 2-3 предложениях",
-  "area_sqm": число (примерная площадь помещения в кв.м),
-  "categories": [
-    {
-      "name": "название категории работ",
-      "icon": "эмодзи-иконка",
-      "items": [
-        {
-          "work": "название работы или материала",
-          "unit": "единица измерения (м², м.п., шт, компл.)",
-          "qty": число,
-          "price_per_unit": число (цена за единицу в рублях),
-          "total": число (итого по позиции в рублях)
-        }
-      ]
-    }
-  ],
-  "total_works": число (итого работы),
-  "total_materials": число (итого материалы),
-  "grand_total": число (общий итог),
-  "timeline_weeks": число (срок в неделях),
-  "notes": ["важное примечание 1", "важное примечание 2"]
-}
-
-Категории должны включать: Демонтаж, Черновые работы, Чистовые работы, Электрика, Сантехника (если видна), Материалы и отделка, Мебель и декор (если нужна замена).
-Цены — актуальные для Москвы 2024-2025 года.`;
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'gpt-4o',
         max_tokens: 4096,
-        system: systemPrompt,
+        temperature: 0.3,
+        response_format: { type: 'json_object' },   // ← гарантирует чистый JSON
         messages: [
+          {
+            role: 'system',
+            content: 'Ты — опытный прораб и сметчик с 20-летним стажем в России. Отвечай ТОЛЬКО валидным JSON согласно схеме пользователя.'
+          },
           {
             role: 'user',
             content: [
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: mediaType,
-                  data: base64Data
-                }
-              },
-              {
-                type: 'text',
-                text: userPrompt
-              }
+              { type: 'image_url', image_url: { url: imageUrl, detail: 'high' } },
+              { type: 'text', text: userPrompt }
             ]
           }
         ]
@@ -189,28 +153,20 @@ ${description ? `Желаемые изменения: ${description}` : ''}
     });
 
     const data = await response.json();
-
     if (!response.ok) {
-      console.error('Anthropic error:', data);
-      return res.status(response.status).json({
-        error: data.error?.message || 'Ошибка Anthropic API'
-      });
+      console.error('OpenAI /chat/completions error:', data);
+      return res.status(response.status).json({ error: data.error?.message || 'Ошибка OpenAI API' });
     }
 
-    const rawText = data.content[0].text;
+    const rawText = data.choices[0].message.content;
 
-    // Parse JSON from response
     let estimate;
     try {
-      // Strip possible markdown code fences
       const cleaned = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       estimate = JSON.parse(cleaned);
     } catch (parseErr) {
-      console.error('JSON parse error:', parseErr, 'Raw:', rawText);
-      return res.status(500).json({
-        error: 'Не удалось разобрать ответ модели. Попробуйте ещё раз.',
-        raw: rawText
-      });
+      console.error('JSON parse error:', parseErr, '\nRaw:', rawText);
+      return res.status(500).json({ error: 'Не удалось разобрать ответ модели. Попробуйте ещё раз.', raw: rawText });
     }
 
     res.json({ success: true, estimate });
@@ -221,19 +177,15 @@ ${description ? `Желаемые изменения: ${description}` : ''}
   }
 });
 
-// ─── Catch-all: serve frontend ─────────────────────────────────────────────────
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+// ─── Catch-all ─────────────────────────────────────────────────────────────────
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-// ─── Error handler ─────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: err.message });
 });
 
 app.listen(PORT, () => {
-  console.log(`\n🏠 Interior Redesign AI запущен на http://localhost:${PORT}`);
-  console.log(`   OpenAI API:    ${process.env.OPENAI_API_KEY ? '✅ настроен' : '❌ не задан (добавьте в .env)'}`);
-  console.log(`   Anthropic API: ${process.env.ANTHROPIC_API_KEY ? '✅ настроен' : '❌ не задан (добавьте в .env)'}\n`);
+  console.log(`\n🏠 Interior Redesign AI → http://localhost:${PORT}`);
+  console.log(`   OpenAI API: ${process.env.OPENAI_API_KEY ? '✅ настроен' : '❌ не задан (добавьте в .env)'}\n`);
 });
